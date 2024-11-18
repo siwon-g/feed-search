@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluesky フィード検索</title>
+    <link rel="icon" href="images/favicon.ico" sizes="32x32">
+    <link rel="stylesheet" href="feedsearch.css">
+</head>
+
+<body>
+    <!-- ページネーションのテンプレート定義部分 -->
+    <template id="template-pagination">
+        <div class="pagination" style="display: none;">
+            <button class="firstPage">最初へ</button>
+            <button class="prevPage">前へ</button>
+            <span class="pagination-info">
+                <span class="currentPage">1</span> / <span class="totalPages">1</span> ページ
+            </span>
+            <button class="nextPage">次へ</button>
+            <button class="lastPage">最後へ</button>
+        </div>
+    </template>
+
+    <div class="header">
+        <div id="headerControls" class="header-controls" style="display: none;">
+            <button id="logoutButton" class="logout-button">ログアウト</button>
+        </div>
+        <h1>Bluesky フィード検索</h1>
+    </div>
+
+    <div id="loginContainer" class="login-container">
+        <div class="login-form">
+            <h2>ログイン</h2>
+            <p class="login-description">
+                Blueskyのアカウント情報を入力してください。<br><br>
+                ※セキュリティのため、アプリパスワードの使用を推奨します。<br>
+                アプリパスワードはBlueskyの「設定」－「アプリパスワード」画面を開き、「アプリパスワードを追加」ボタンから作成<br>
+                または<a href="https://docs.tokimeki.blue/ja/apppassword" title="アプリパスワードについて（TOKIMEKI Document）"
+                    target="_blank">こちらを</a>参考に設定してください。
+            </p>
+            <input type="text" id="identifier" placeholder="ユーザーID （例： example.bsky.social）" class="login-input">
+            <input type="password" id="password" placeholder="アプリパスワード （例： abcd-abcd-abcd-abcd）" class="login-input">
+            <button id="loginButton" class="login-button">ログイン</button>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div id="searchContainer" class="search-container" style="display: none;">
+        <input type="text" id="searchInput" placeholder="検索キーワードを入力" class="search-input">
+        <button id="searchButton" class="search-button">検索</button>
+        <!-- <button id="logoutButton" class="logout-button">ログアウト</button><br> -->
+    </div>
+    <div id="searchNotes" class="search-notes" style="display: none;">
+        <p>※最大100件、いいねが多い順で表示</p>
+    </div>
+    <div id="errorMessage"></div>
+
+    <!-- テンプレートを使って表示 -->
+    <div-pagination></div-pagination>
+
+    <div id="loading" class="loading" style="display: none;">
+        検索中...
+    </div>
+
+    <div id="feedsContainer" class="feeds-grid"></div>
+
+    <!-- テンプレートを使って表示 -->
+    <div-pagination></div-pagination>
+
+    <!-- フッター -->
+    <div class="footer">
+        <div class="footer-links">
+            <a href="https://bsky.app/profile/siwong.bsky.social" target="_blank" rel="noopener noreferrer">
+                <img src="images/bluesky_media_kit_logo.svg" alt="Bluesky Logo" class="footer-icon">
+            </a>
+            <a href="https://github.com/siwon-g/feed-search" target="_blank" rel="noopener noreferrer">
+                <img src="images/github-mark-small.svg" alt="GitHub Logo" class="footer-icon">
+            </a>
+        </div>
+        <div class="footer-text">
+            <p>※公式との違いは最大15件取得か、100件かの違いだけです。公式の検索が改善されたら多分削除します。</p>
+            <p>公式との違い等については<a href="https://github.com/dummy/feed-search" target="_blank"
+                    rel="noopener noreferrer">Githubの<span lang="en">Readme</span></a>参照。</p>
+        </div>
+    </div>
+
+    <!-- ページネーションのテンプレートを適用する -->
+    <script>
+        class DivPagination extends HTMLElement {
+            connectedCallback() {
+                const template = document.getElementById('template-pagination');
+                const content = template.content.cloneNode(true);
+                this.appendChild(content);
+            }
+        }
+        customElements.define('div-pagination', DivPagination);
+    </script>
+
+    <!-- blueskyApi.js と feedSearch.js を直接読み込み -->
+    <script src="blueskyApi.js"></script>
+    <script src="feedSearch.js"></script>
+</body>
+
+</html>
