@@ -1,5 +1,5 @@
 # BlueSky フィード検索
-[Bluesky フィード検索サイト](https://siwon-g.github.io/feed-search/ "Bluesky フィード検索サイト"){:target="_blank"}
+<a href="https://siwon-g.github.io/feed-search/" target="_blank" rel="noopener noreferrer" title="Bluesky フィード検索サイト" >Bluesky フィード検索サイト</a>
 
 ## このサイトの目的
 * 公式のフィード検索が改善されるまでの代替用
@@ -32,6 +32,6 @@
 * APIが対応してないから
 
 ## その他
-* app.bsky.unspecced.get_popular_feed_generators については [The AT Protocol SDK](https://atproto.blue/en/latest/atproto/atproto_client.models.app.bsky.unspecced.get_popular_feed_generators.html "The AT Protocol SDK"){:target="_blank"} を参照
+* app.bsky.unspecced.get_popular_feed_generators については <a href="https://atproto.blue/en/latest/atproto/atproto_client.models.app.bsky.unspecced.get_popular_feed_generators.html" target="_blank" rel="noopener noreferrer" title="The AT Protocol SDK">The AT Protocol SDK</a> を参照
   * Request, Response両方にCursorの記述があるが、実際にはResponseにCursorが返ってこないのが続きを取得出来ない原因
   * その内修正されると思う
