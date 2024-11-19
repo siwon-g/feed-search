@@ -126,7 +126,6 @@ async function performSearch() {
 
 // エラーメッセージ表示関数
 function showError(message) {
-    // const container = document.getElementById('feedsContainer');
     const container = document.getElementById('errorMessage');
     container.innerHTML = `<div class="error-message">${message}</div>`;
 }
