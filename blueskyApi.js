@@ -3,14 +3,14 @@ const BLUESKY_API = {
     baseUrl: 'https://bsky.social/xrpc/',
     session: null,
 
-    // 認証情報をローカルストレージに保存
+    // 認証情報をセッションストレージに保存
     saveSession(session) {
-        localStorage.setItem('bluesky_session', JSON.stringify(session));
+        sessionStorage.setItem('bluesky_session', JSON.stringify(session));
     },
 
-    // 認証情報をローカルストレージから読み込み
+    // 認証情報をセッションストレージから読み込み
     loadSession() {
-        const saved = localStorage.getItem('bluesky_session');
+        const saved = sessionStorage.getItem('bluesky_session');
         if (saved) {
             this.session = JSON.parse(saved);
             return true;
@@ -20,7 +20,7 @@ const BLUESKY_API = {
 
     // 認証情報をクリア
     clearSession() {
-        localStorage.removeItem('bluesky_session');
+        sessionStorage.removeItem('bluesky_session');
         this.session = null;
     },
 
@@ -36,14 +36,14 @@ const BLUESKY_API = {
             });
 
             if (!response.ok) {
-                throw new Error('認証に失敗しました');
+                throw new Error('認証に失敗しました。ユーザーIDまたはアプリパスワードを確認してください。');
             }
 
             this.session = await response.json();
             this.saveSession(this.session);
             return this.session;
         } catch (error) {
-            console.error('ログインエラー:', error);
+            console.error('ログインエラー:', error.message);
             throw error;
         }
     },
@@ -53,7 +53,7 @@ const BLUESKY_API = {
         try {
             // セッションが無い場合はログイン
             if (!this.session?.accessJwt) {
-                throw new Error('認証が必要です');
+                throw new Error('認証が必要です。再度ログインしてください。');
             }
 
             const response = await fetch(
@@ -69,14 +69,14 @@ const BLUESKY_API = {
             if (!response.ok) {
                 if (response.status === 401) {
                     this.clearSession();
-                    throw new Error('認証の有効期限が切れました');
+                    throw new Error('認証の有効期限が切れました。もう一度ログインしてください。');
                 }
                 throw new Error(`responseコード ${response.status}）`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('検索エラー:', error);
+            console.error('検索エラー:', error.message);
             throw error;
         }
     }

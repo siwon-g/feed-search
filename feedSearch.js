@@ -18,6 +18,9 @@ function initializeApp() {
     loginButton.addEventListener('click', async () => {
         const identifier = document.getElementById('identifier').value;
         const password = document.getElementById('password').value;
+
+        // エラー表示をクリア
+        loginError.textContent = '';
         loginError.style.display = 'none';
 
         if (!identifier || !password) {
@@ -43,8 +46,6 @@ function initializeApp() {
     // 検索関連
     const searchInput = document.getElementById('searchInput');
     const searchButton = document.getElementById('searchButton');
-    const prevButton = document.getElementById('prevPage');
-    const nextButton = document.getElementById('nextPage');
 
     // 検索ボタンのイベントリスナー
     searchButton.addEventListener('click', () => performSearch());
@@ -55,10 +56,6 @@ function initializeApp() {
             performSearch();
         }
     });
-
-    // ページネーションのイベントリスナー
-    prevButton.addEventListener('click', handlePrevPage);
-    nextButton.addEventListener('click', handleNextPage);
 }
 
 function checkAuthState() {
@@ -68,6 +65,7 @@ function checkAuthState() {
         showLoginForm();
     }
 }
+
 function showLoginForm() {
     document.getElementById('loginContainer').style.display = 'block';
     document.getElementById('searchContainer').style.display = 'none';
@@ -101,8 +99,8 @@ async function performSearch() {
 
     try {
         loadingElement.style.display = 'block';
-        containerFeed.innerHTML = '';
-        containerError.innerHTML = '';
+        containerFeed.innerHTML = ''; // 既存リストのクリア
+        containerError.innerHTML = ''; // エラー表示のクリア
         paginationElements.forEach(el => el.style.display = 'none'); // 検索中は非表示
 
         // Bluesky APIを使用して検索
@@ -127,7 +125,13 @@ async function performSearch() {
 // エラーメッセージ表示関数
 function showError(message) {
     const container = document.getElementById('errorMessage');
-    container.innerHTML = `<div class="error-message">${message}</div>`;
+    container.innerHTML = '';
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message; // textContentを使用して安全に挿入
+
+    container.appendChild(errorDiv);
 }
 
 // フィードカード作成関数
@@ -135,20 +139,55 @@ function createFeedCard(feed) {
     const feedId = feed.uri.split('/').pop();
     const feedUrl = `https://bsky.app/profile/${feed.creator.handle}/feed/${feedId}`;
 
+    // カード本体 (Aタグ)
     const card = document.createElement('a');
     card.href = feedUrl;
     card.target = '_blank';
     card.className = 'feed-card';
 
-    card.innerHTML = `
-        <div class="feed-content">
-        <img class="feed-avatar" src="${feed.avatar}" alt="${feed.displayName} avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><defs><linearGradient id=%22skyGradient%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 style=%22stop-color:%23accbee%22/><stop offset=%22100%%22 style=%22stop-color:%2366a6ff%22/></linearGradient></defs><rect width=%2264%22 height=%2264%22 fill=%22url(%23skyGradient)%22/><text x=%2250%%22 y=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23ffffff%22 font-size=%2212%22>No Image</text></svg>'">
-            <h2 class="feed-name">${feed.displayName}</h2>
-            <div class="feed-creator">by ${feed.creator.displayName}</div>
-            <p class="feed-description">${feed.description || 'No description available'}</p>
-            <div class="feed-likes">${feed.likeCount || 0}</div>
-        </div>
-    `;
+    // コンテンツコンテナ
+    const content = document.createElement('div');
+    content.className = 'feed-content';
+
+    // アバター画像
+    const avatar = document.createElement('img');
+    avatar.className = 'feed-avatar';
+    avatar.src = feed.avatar || '';
+    avatar.alt = `${feed.displayName} avatar`;
+
+    // 画像読み込みエラー時のフォールバック処理 (インラインJSを使わない)
+    const fallbackSvg = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><defs><linearGradient id=%22skyGradient%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 style=%22stop-color:%23accbee%22/><stop offset=%22100%%22 style=%22stop-color:%2366a6ff%22/></linearGradient></defs><rect width=%2264%22 height=%2264%22 fill=%22url(%23skyGradient)%22/><text x=%2250%%22 y=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23ffffff%22 font-size=%2212%22>No Image</text></svg>';
+    avatar.addEventListener('error', () => {
+        avatar.src = fallbackSvg;
+    }, { once: true });
+
+    // フィード名
+    const name = document.createElement('h2');
+    name.className = 'feed-name';
+    name.textContent = feed.displayName;
+
+    // 作者
+    const creator = document.createElement('div');
+    creator.className = 'feed-creator';
+    creator.textContent = `by ${feed.creator.displayName || feed.creator.handle}`;
+
+    // 説明文
+    const description = document.createElement('p');
+    description.className = 'feed-description';
+    description.textContent = feed.description || 'No description available';
+
+    // いいね数
+    const likes = document.createElement('div');
+    likes.className = 'feed-likes';
+    likes.textContent = feed.likeCount || 0;
+
+    // 組み立て
+    content.appendChild(avatar);
+    content.appendChild(name);
+    content.appendChild(creator);
+    content.appendChild(description);
+    content.appendChild(likes);
+    card.appendChild(content);
 
     return card;
 }
@@ -170,58 +209,34 @@ function updatePagination(paginationElements) {
 
         // ボタンの有効/無効状態を更新
         prevButton.disabled = currentPage === 1;
-        nextButton.disabled = currentPage === totalPages;
+        nextButton.disabled = currentPage === totalPages || totalPages === 0;
         firstButton.disabled = currentPage === 1;
-        lastButton.disabled = currentPage === totalPages;
+        lastButton.disabled = currentPage === totalPages || totalPages === 0;
 
-        // 「最初のページ」ボタンのイベントリスナー
-        firstButton.onclick = () => {
-            if (currentPage !== 1) {
-                currentPage = 1;
-                updatePagination(paginationElements);
-                displayFeeds();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        // 「最後のページ」ボタンのイベントリスナー
-        lastButton.onclick = () => {
-            if (currentPage !== totalPages) {
-                currentPage = totalPages;
-                updatePagination(paginationElements);
-                displayFeeds();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        // 「前のページ」ボタンのイベントリスナー
-        prevButton.onclick = () => {
-            if (currentPage > 1) {
-                currentPage--;
-                updatePagination(paginationElements);
-                displayFeeds();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        // 「次のページ」ボタンのイベントリスナー
-        nextButton.onclick = () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                updatePagination(paginationElements);
-                displayFeeds();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
+        // イベントリスナーの再設定
+        firstButton.onclick = () => goToPage(1, paginationElements);
+        lastButton.onclick = () => goToPage(totalPages, paginationElements);
+        prevButton.onclick = () => goToPage(currentPage - 1, paginationElements);
+        nextButton.onclick = () => goToPage(currentPage + 1, paginationElements);
     });
+}
+
+// 共通のページ移動処理
+function goToPage(page, elements) {
+    const totalPages = Math.ceil(allFeeds.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+
+    currentPage = page;
+    updatePagination(elements);
+    displayFeeds();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // フィード表示関数
 function displayFeeds() {
     const containerFeed = document.getElementById('feedsContainer');
     containerFeed.innerHTML = '';
-    const containerError = document.getElementById('errorMessage');
-    containerError.innerHTML = '';
+
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentFeeds = allFeeds.slice(startIndex, endIndex);
@@ -234,22 +249,4 @@ function displayFeeds() {
     currentFeeds.forEach(feed => {
         containerFeed.appendChild(createFeedCard(feed));
     });
-}
-
-// ページ移動処理関数
-function handlePrevPage() {
-    if (currentPage > 1) {
-        currentPage--;
-        updatePagination();
-        displayFeeds();
-    }
-}
-
-function handleNextPage() {
-    const totalPages = Math.ceil(allFeeds.length / itemsPerPage);
-    if (currentPage < totalPages) {
-        currentPage++;
-        updatePagination();
-        displayFeeds();
-    }
 }
